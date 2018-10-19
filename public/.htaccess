@@ -1,0 +1,60 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews
+    </IfModule>
+
+    RewriteEngine On
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+    # Handle Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    RewriteEngine On
+   # Set an environment variable for http/https.
+    RewriteCond %{HTTPS} =on
+    RewriteRule ^(.*)$ - [env=ps:https]
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^(.*)$ - [env=ps:http]
+
+    # Check if m=1 is set and set cookie 'm' equal to 1.
+    RewriteCond %{QUERY_STRING} (^|&)m=1(&|$)
+    RewriteRule ^ - [CO=m:1:example.com]
+
+    # Check if m=0 is set and set cookie 'm' equal to 0.
+    RewriteCond %{QUERY_STRING} (^|&)m=0(&|$)
+    RewriteRule ^ - [CO=m:0:example.com]
+
+    # Cookie can't be set and read in the same request so check.
+    RewriteCond %{QUERY_STRING} (^|&)m=0(&|$)
+    RewriteRule ^ - [S=1]
+
+    # Check if this looks like a mobile device.
+    RewriteCond %{HTTP:x-wap-profile} !^$ [OR]
+    RewriteCond %{HTTP_USER_AGENT} "android|blackberry|ipad|iphone|ipod|iemobile|opera mobile|palmos|webos|googlebot-mobile" [NC,OR]
+    RewriteCond %{HTTP:Profile} !^$
+    # Check if we're not already on the mobile site.
+    RewriteCond %{HTTP_HOST} !^m\.
+    # Check if cookie is not set to force desktop site.
+    RewriteCond %{HTTP_COOKIE} !^.*m=0.*$ [NC]
+    # Now redirect to the mobile site preserving http or https.
+    RewriteRule ^ %{ENV:ps}://m.example.com%{REQUEST_URI} [R,L]
+
+    # Check if this looks like a desktop device.
+    RewriteCond %{HTTP_USER_AGENT} "!(android|blackberry|ipad|iphone|ipod|iemobile|opera mobile|palmos|webos|googlebot-mobile)" [NC]
+    # Check if we're on the mobile site.
+    RewriteCond %{HTTP_HOST} ^m\.
+    # Check if cookie is not set to force mobile site.
+    RewriteCond %{HTTP_COOKIE} !^.*m=1.*$ [NC]
+    # Now redirect to the mobile site preserving http or https.
+    RewriteRule ^ %{ENV:ps}://example.com%{REQUEST_URI} [R,L]
+
+</IfModule>
